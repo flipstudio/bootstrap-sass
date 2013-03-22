@@ -44,12 +44,20 @@
     constructor: Typeahead
 
   , select: function () {
-      var val = this.$menu.find('.active').attr('data-value')
-      this.$element
-        .val(this.updater(val))
-        .change()
+      var current = this.$menu.find('.active')
+      if (this.options.forceSelection || current.length) {
+        var val = current.attr('data-value')
+        this.$element
+          .val(this.updater(val))
+          .change()
+      }
+
       return this.hide()
     }
+
+  , isActive: function() {
+      return this.$menu.find('.active').length
+  }
 
   , updater: function (item) {
       return item
@@ -143,16 +151,20 @@
         return i[0]
       })
 
-      items.first().addClass('active')
+      if (this.options.forceSelection) {
+        items.first().addClass('active')
+      }
       this.$menu.html(items)
       return this
     }
 
-  , next: function (event) {
-      var active = this.$menu.find('.active').removeClass('active')
+  , next: function (event) { 
+      var current = this.$menu.find('.active')
+        , active = current.removeClass('active')
         , next = active.next()
+        , shouldRestart = this.options.forceSelection ? !next.length : !current.length
 
-      if (!next.length) {
+      if (shouldRestart) {
         next = $(this.$menu.find('li')[0])
       }
 
@@ -160,10 +172,12 @@
     }
 
   , prev: function (event) {
-      var active = this.$menu.find('.active').removeClass('active')
+      var current = this.$menu.find('.active')
+        , active = current.removeClass('active')
         , prev = active.prev()
+        , shouldRestart = this.options.forceSelection ? !prev.length : !current.length
 
-      if (!prev.length) {
+      if (shouldRestart) {
         prev = this.$menu.find('li').last()
       }
 
@@ -203,6 +217,7 @@
         case 9: // tab
         case 13: // enter
         case 27: // escape
+          if (!this.forceSelection && !this.isActive()) return
           e.preventDefault()
           break
 
@@ -309,6 +324,7 @@
   , menu: '<ul class="typeahead dropdown-menu"></ul>'
   , item: '<li><a href="#"></a></li>'
   , minLength: 1
+  , forceSelection : true
   }
 
   $.fn.typeahead.Constructor = Typeahead
